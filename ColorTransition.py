@@ -22,9 +22,9 @@ START_COLOR = {"R":255, "G":0, "B":0}
 END_COLOR = {"R":0, "G":0, "B":255}
 
 def fade(start_color, end_color, pos):
-    red_delta = end_color["R"] - start_color["R"]* pos
-    green_delta = end_color["G"] - start_color["G"]* pos
-    blue_delta = end_color["B"] - start_color["B"]* pos
+    red_delta = (end_color["R"] - start_color["R"])* pos
+    green_delta = (end_color["G"] - start_color["G"])* pos
+    blue_delta = (end_color["B"] - start_color["B"])* pos
 
     new_color = {
         "R":start_color["R"]+ red_delta, 
