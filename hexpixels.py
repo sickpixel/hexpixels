@@ -37,15 +37,24 @@ class HexPixels(QtCore.QObject):
         self.breathe_in = False
 
         self.mutex = QtCore.QMutex()
+        self.patterns = {
+            "Breathe": self.breathe, 
+            "Single cell snake":self.single_cell_snake}
+        self.current_pattern = "Breathe" 
 
     def run(self):
         LOG.debug('[{0}] HexPixels::run'.format(QtCore.QThread.currentThread().objectName()))
         counter = 0
         while not self.stop_received:
-            self.do_fade(counter)
+            self.patterns[self.current_pattern](counter)
+            ##self.single_cell_snake(counter)
+            ##self.breathe(counter)
             counter += 1
             time.sleep(0.1)
         self.stopped = True
+    
+    def set_current_pattern(self,pattern):
+        self.current_pattern = pattern
 
     def fade_single(self, color,hex_index):
         for i in range (30):
@@ -95,7 +104,7 @@ class HexPixels(QtCore.QObject):
         self.end_color = end_color
         self.mutex.unlock()
 
-    def do_fade(self, counter):
+    def breathe(self, counter):
         if counter % 100 == 0 :
             self.breathe_in = not self.breathe_in
         count = (counter % 100) / 100.0
@@ -109,19 +118,15 @@ class HexPixels(QtCore.QObject):
         self.fade_multiple(color2,[1,3,5,7,9,11])
         self.show()
 
-    #     for i in range(100):
-
-    #         color= HP.get_fade_color(END_COLOR, START_COLOR, i/100.0)
-    #         ##fade_single(color,7)
-    #         HP.fade_multiple(color,[2,5,7])
-
-    #         color= HP.get_fade_color(START_COLOR, END_COLOR, i/100.0)
-    #         HP.fade_single(color,8)
-
-
-    #         HP.show()
-    #         time.sleep(0.01)
-
+    def single_cell_snake(self, counter):
+        on_hex_index = counter%13
+        if on_hex_index == 0:
+            off_hex_index = 12
+        else:
+            off_hex_index = on_hex_index - 1
+        self.fade_single( self.start_color,on_hex_index)
+        self.fade_single( self.end_color, off_hex_index)
+        self.show()
 
     def shutdown(self):
         LOG.debug('[{0}] HexPixels::stop received'.format(QtCore.QThread.currentThread().objectName()))

@@ -59,12 +59,18 @@ class MainWindow(QtWidgets.QWidget):
         self.end_color_button.clicked.connect(self.choose_end_color)
 
         self.do_fade_button = QtWidgets.QPushButton("Do Fade")
+
+        self.combo_box = QtWidgets.QComboBox()
+        self.combo_box.addItems(["Breathe", "Single cell snake"])
+        self.combo_box.currentTextChanged.connect(self.change_pattern)
+
         # self.do_fade_button.clicked.connect(do_fade)
 
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.start_color_button)
         self.layout.addWidget(self.end_color_button)
-        self.layout.addWidget(self.do_fade_button)
+        ##self.layout.addWidget(self.do_fade_button)
+        self.layout.addWidget(self.combo_box)
 
         self.setLayout(self.layout)
         self.show()
@@ -96,6 +102,10 @@ class MainWindow(QtWidgets.QWidget):
         self.hp.set_end_color({"R":color.red(), "G":color.green(), "B":color.blue()})
         #print(END_COLOR)
         self.end_color_button.setStyleSheet("background-color: %s"%color.name())
+
+    def change_pattern(self, pattern):
+        print(pattern)
+        self.hp.set_current_pattern(pattern)
 
     def closeEvent(self, event):
         self.hp.shutdown()
