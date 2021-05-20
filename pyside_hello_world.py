@@ -51,7 +51,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__()
-
+        self.hp = hexpixels.HexPixels(390, 0.5)
         self.start_color_button = QtWidgets.QPushButton("Start color")
         self.start_color_button.clicked.connect(self.choose_start_color)
 
@@ -61,22 +61,38 @@ class MainWindow(QtWidgets.QWidget):
         self.do_fade_button = QtWidgets.QPushButton("Do Fade")
 
         self.combo_box = QtWidgets.QComboBox()
-        self.combo_box.addItems(["Breathe", "Single cell snake"])
+        self.combo_box.addItems(list(self.hp.patterns.keys()))
         self.combo_box.currentTextChanged.connect(self.change_pattern)
 
         # self.do_fade_button.clicked.connect(do_fade)
+        self.speed_slider = QtWidgets.QSlider(orientation = QtCore.Qt.Horizontal)
+        self.speed_slider.setMinimum(1)
+        self.speed_slider.setMaximum(25)
+        self.speed_slider.valueChanged.connect(self.set_sleep_time)
 
-        self.layout = QtWidgets.QVBoxLayout()
+        self.speed_slider_layout = QtWidgets.QHBoxLayout()
+        self.speed_slider_layout.addWidget(QtWidgets.QLabel("Speed"))
+        self.speed_slider_layout.addWidget(self.speed_slider)
+    
+
+
+        self.layout =   QtWidgets.QVBoxLayout()
         self.layout.addWidget(self.start_color_button)
         self.layout.addWidget(self.end_color_button)
         ##self.layout.addWidget(self.do_fade_button)
         self.layout.addWidget(self.combo_box)
+        self.layout.addLayout(self.speed_slider_layout)
+
+        
 
         self.setLayout(self.layout)
         self.show()
+
+
+
         QtCore.QThread.currentThread().setObjectName("MAIN")
         LOG.debug('[{0}] HexPixelsUI::run'.format(QtCore.QThread.currentThread().objectName()))
-        self.hp = hexpixels.HexPixels(390, 0.5)
+        
 
         #self.send_start_color.connect(self.hp.set_start_color, QtCore.Qt.QueuedConnection)
         #self.send_end_color.connect(self.hp.set_end_color, QtCore.Qt.QueuedConnection)
@@ -112,6 +128,11 @@ class MainWindow(QtWidgets.QWidget):
         self.hp_thread.quit()
         self.hp_thread.wait()
         event.accept()
+
+    def set_sleep_time(self, value):
+        value = 1/value
+        print (value)
+        self.hp.sleep_time = value
 
 app = QtWidgets.QApplication(sys.argv)
 main_window = MainWindow()

@@ -39,18 +39,23 @@ class HexPixels(QtCore.QObject):
         self.mutex = QtCore.QMutex()
         self.patterns = {
             "Breathe": self.breathe, 
-            "Single cell snake":self.single_cell_snake}
+            "Single cell snake":self.single_cell_snake,
+            "Fedded sanke":self.single_cell_snake_with_fade
+            }
+            
         self.current_pattern = "Breathe" 
+        self.sleep_time =0.1
 
     def run(self):
         LOG.debug('[{0}] HexPixels::run'.format(QtCore.QThread.currentThread().objectName()))
         counter = 0
         while not self.stop_received:
             self.patterns[self.current_pattern](counter)
+            self.show()
             ##self.single_cell_snake(counter)
             ##self.breathe(counter)
             counter += 1
-            time.sleep(0.1)
+            time.sleep(self.sleep_time)
         self.stopped = True
     
     def set_current_pattern(self,pattern):
@@ -116,7 +121,7 @@ class HexPixels(QtCore.QObject):
             color2= self.get_fade_color(self.start_color, self.end_color, count)
         self.fade_multiple(color1,[0,2,4,6,8,10,12])
         self.fade_multiple(color2,[1,3,5,7,9,11])
-        self.show()
+        
 
     def single_cell_snake(self, counter):
         on_hex_index = counter%13
@@ -126,7 +131,31 @@ class HexPixels(QtCore.QObject):
             off_hex_index = on_hex_index - 1
         self.fade_single( self.start_color,on_hex_index)
         self.fade_single( self.end_color, off_hex_index)
-        self.show()
+        
+    def single_cell_snake_with_fade(self, counter):
+        index = counter%13
+        
+        # set the color of the snake head (snake 100%)
+        self.fade_single( self.start_color,index)
+        # set the color of the snake body (snake 66%)
+        body_color = self.get_fade_color(self.start_color, self.end_color, 0.33)
+        index = self.get_previous_hex(index)
+        self.fade_single( body_color, index)
+        # set the color of the snake tail (snake 33%)
+        tail_color = self.get_fade_color(self.start_color, self.end_color, 0.66)
+        index = self.get_previous_hex(index)
+        self.fade_single( tail_color, index)
+        # revert the previous tail to the bakcground
+        index = self.get_previous_hex(index)
+        self.fade_single( self.end_color, index)
+    
+    def get_previous_hex(self, index):
+        if index == 0:
+            return 12
+        else:
+            return index - 1
+
+    
 
     def shutdown(self):
         LOG.debug('[{0}] HexPixels::stop received'.format(QtCore.QThread.currentThread().objectName()))
