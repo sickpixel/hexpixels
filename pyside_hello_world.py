@@ -12,38 +12,6 @@ LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-
-
-
-# def do_fade():
-#     for i in range(100):
-
-#         color= HP.get_fade_color(START_COLOR, END_COLOR, i/100.0)
-#         ##fade_single(color,7)
-#         HP.fade_multiple(color,[2,5,7])
-
-#         color= HP.get_fade_color(END_COLOR, START_COLOR, i/100.0)
-#         HP.fade_single(color,8)
-
-
-#         HP.show()
-#         time.sleep(0.01)
-
-#     for i in range(100):
-
-#         color= HP.get_fade_color(END_COLOR, START_COLOR, i/100.0)
-#         ##fade_single(color,7)
-#         HP.fade_multiple(color,[2,5,7])
-
-#         color= HP.get_fade_color(START_COLOR, END_COLOR, i/100.0)
-#         HP.fade_single(color,8)
-
-
-#         HP.show()
-#         time.sleep(0.01)
-
-
-
 class MainWindow(QtWidgets.QWidget):
 
     #send_start_color = QtCore.Signal(dict)
@@ -70,9 +38,18 @@ class MainWindow(QtWidgets.QWidget):
         self.speed_slider.setMaximum(25)
         self.speed_slider.valueChanged.connect(self.set_sleep_time)
 
+        self.brightness_slider = QtWidgets.QSlider(orientation = QtCore.Qt.Horizontal)
+        self.brightness_slider.setMinimum(1)
+        self.brightness_slider.setMaximum(7)
+        self.brightness_slider.valueChanged.connect(self.set_brightness)
+
         self.speed_slider_layout = QtWidgets.QHBoxLayout()
         self.speed_slider_layout.addWidget(QtWidgets.QLabel("Speed"))
         self.speed_slider_layout.addWidget(self.speed_slider)
+
+        self.brightness_slider_layout = QtWidgets.QHBoxLayout()
+        self.brightness_slider_layout.addWidget(QtWidgets.QLabel("Brightness"))
+        self.brightness_slider_layout.addWidget(self.brightness_slider)
     
 
 
@@ -82,7 +59,7 @@ class MainWindow(QtWidgets.QWidget):
         ##self.layout.addWidget(self.do_fade_button)
         self.layout.addWidget(self.combo_box)
         self.layout.addLayout(self.speed_slider_layout)
-
+        self.layout.addLayout(self.brightness_slider_layout)
         
 
         self.setLayout(self.layout)
@@ -134,6 +111,11 @@ class MainWindow(QtWidgets.QWidget):
         print (value)
         self.hp.sleep_time = value
 
+    def set_brightness(self, value):
+        value = value/10
+        print ("brightness = {0}".format(value)) 
+        self.hp.set_brightness(value)
+    
 app = QtWidgets.QApplication(sys.argv)
 main_window = MainWindow()
 app.exec_()

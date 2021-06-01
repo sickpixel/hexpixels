@@ -6,13 +6,55 @@ LOG = logging.getLogger(__name__)
 
 from PySide2 import QtCore
 
+class SingleHex(QtCore.QObject):
+    NUM_PIXELS = 30
+
+    def __init__(self, hex_index,pixels):
+
+        super(SingleHex, self).__init__()
+        self.start_index = self.NUM_PIXELS * hex_index
+        self.end_index = self.start_index + (self.NUM_PIXELS - 1)
+        self.pixels = pixels
+
+    def wheel(self, pos):
+        # Input a value 0 to 255 to get a color value.
+        # The colours are a transition r - g - b - back to r.
+        if pos < 0 or pos > 255:
+            r = g = b = 0
+        elif pos < 85:
+            r = int(pos * 3)
+            g = int(255 - pos * 3)
+            b = 0
+        elif pos < 170:
+            pos -= 85
+            r = int(255 - pos * 3)
+            g = 0
+            b = int(pos * 3)
+        else:
+            pos -= 170
+            r = 0
+            g = int(pos * 3)
+            b = int(255 - pos * 3)
+        return (r, g, b) #if ORDER in (neopixel.RGB, neopixel.GRB) else (r, g, b, 0)
+
+
+    def rainbow_cycle(self, counter):
+        counter = counter * 5
+        j = counter %255
+        for i in range(self.start_index, self.end_index +1):
+            #if i%2 == 0: 
+            #    continue
+            pixel_index = (i * 256 // self.NUM_PIXELS) + j
+            self.pixels[i] = self.wheel(pixel_index & 255)
+
+
 class HexPixels(QtCore.QObject):
 
     # Choose an open pin connected to the Data In of the NeoPixel strip, i.e. board.D18
     # NeoPixels must be connected to D10, D12, D18 or D21 to work.
     PIXEL_PIN = board.D18
 
-    def __init__(self, num_pixels, brightness, pixel_order=neopixel.GRB):
+    def __init__(self, num_pixels, brightness):
         """ numpixels: the number of NeoPixels
         brightness: 0.0 to 1.0
         pixel_order:  The order of the pixel colors - RGB or GRB. Some NeoPixels have red and green reversed!
@@ -20,12 +62,13 @@ class HexPixels(QtCore.QObject):
 
         """
         super(HexPixels, self).__init__()
+        self.num_pixels = num_pixels
         self.pixels = neopixel.NeoPixel(
             self.PIXEL_PIN, 
-            num_pixels, 
+            self.num_pixels, 
             brightness=brightness, 
             auto_write=False, 
-            pixel_order=pixel_order
+            pixel_order=neopixel.GRB
         )
 
         self.start_color = {"R":255, "G":0, "B":0}
@@ -40,11 +83,23 @@ class HexPixels(QtCore.QObject):
         self.patterns = {
             "Breathe": self.breathe, 
             "Single cell snake":self.single_cell_snake,
-            "Fedded sanke":self.single_cell_snake_with_fade
+            "Fedded sanke":self.single_cell_snake_with_fade,
+            "Dubble Trubble":self.dubble_trubble,
+            "Single Cell Rainbow":self.single_cell_rainbow
             }
             
         self.current_pattern = "Breathe" 
         self.sleep_time =0.1
+        self.is_dubble_trubble_forward = True
+        self.single_hexes = []
+
+        self.num_hexes = int(num_pixels / SingleHex.NUM_PIXELS)
+        print(self.num_hexes)
+        for hex_index in range(self.num_hexes):
+            self.single_hexes.append(SingleHex(hex_index,self.pixels))
+
+    def set_brightness(self, brightness):
+        self.pixels.brightness = brightness
 
     def run(self):
         LOG.debug('[{0}] HexPixels::run'.format(QtCore.QThread.currentThread().objectName()))
@@ -85,6 +140,7 @@ class HexPixels(QtCore.QObject):
             }
 
         return new_color
+
 
     def clear(self):
         self.pixels.fill((0, 0, 0))
@@ -148,6 +204,59 @@ class HexPixels(QtCore.QObject):
         # revert the previous tail to the bakcground
         index = self.get_previous_hex(index)
         self.fade_single( self.end_color, index)
+
+    def dubble_trubble(self, counter):
+        
+        counter = counter%7
+        if not self.is_dubble_trubble_forward:
+            counter = 6-counter
+        lh_cell_num = counter
+        rh_cell_num = 12-counter
+
+        print("LH: {0}, RH {1}".format(lh_cell_num, rh_cell_num))
+
+        self.fade_single( self.start_color,lh_cell_num)
+        self.fade_single( self.start_color, rh_cell_num)
+        if self.is_dubble_trubble_forward and counter > 0:
+            self.fade_single( self.end_color,lh_cell_num-1)
+            self.fade_single( self.end_color, rh_cell_num+1)
+        else:
+            self.fade_single( self.end_color,lh_cell_num+1)
+            self.fade_single( self.end_color, rh_cell_num-1)
+
+        if counter == 6:
+            self.is_dubble_trubble_forward = False
+        elif counter == 0:
+            self.is_dubble_trubble_forward = True
+
+    def dubble_trubble_with_fade(self, counter):
+        tail1_forwards = [1,0,1,2,3,4,5]
+        tail1_backwards = [1,2,3,4,5,6]
+
+        counter = counter%7
+        if not self.is_dubble_trubble_forward:
+            counter = 6-counter
+        lh_cell_num = counter
+        rh_cell_num = 12-counter
+
+        print("LH: {0}, RH {1}".format(lh_cell_num, rh_cell_num))
+
+        # main lh/rh cells
+        self.fade_single( self.start_color,lh_cell_num)
+        self.fade_single( self.start_color, rh_cell_num)
+
+        if self.is_dubble_trubble_forward and counter > 0:
+            self.fade_single( self.end_color,lh_cell_num-1)
+            self.fade_single( self.end_color, rh_cell_num+1)
+        else:
+            self.fade_single( self.end_color,lh_cell_num+1)
+            self.fade_single( self.end_color, rh_cell_num-1)
+        # tail 1 
+        if counter == 6:
+            self.is_dubble_trubble_forward = False
+        elif counter == 0:
+            self.is_dubble_trubble_forward = True
+
     
     def get_previous_hex(self, index):
         if index == 0:
@@ -155,7 +264,9 @@ class HexPixels(QtCore.QObject):
         else:
             return index - 1
 
-    
+    def single_cell_rainbow(self,counter):
+        for single_hex in self.single_hexes:
+            single_hex.rainbow_cycle(counter)
 
     def shutdown(self):
         LOG.debug('[{0}] HexPixels::stop received'.format(QtCore.QThread.currentThread().objectName()))
