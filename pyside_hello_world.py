@@ -6,6 +6,7 @@ import time
 import select
 import math
 import hexpixels
+import json
 
 import logging
 LOG = logging.getLogger(__name__)
@@ -20,11 +21,32 @@ class MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__()
         self.hp = hexpixels.HexPixels(390, 0.5)
-        self.start_color_button = QtWidgets.QPushButton("Start color")
-        self.start_color_button.clicked.connect(self.choose_start_color)
+        self.color_1_button = QtWidgets.QPushButton(" ")
+        self.color_1_button.clicked.connect(self.choose_color_1)
 
-        self.end_color_button = QtWidgets.QPushButton("End color")
-        self.end_color_button.clicked.connect(self.choose_end_color)
+        self.color_2_button = QtWidgets.QPushButton(" ")
+        self.color_2_button.clicked.connect(self.choose_color_2)
+
+        self.color_3_button = QtWidgets.QPushButton(" ")
+        self.color_3_button.clicked.connect(self.choose_color_3)
+
+        self.color_4_button = QtWidgets.QPushButton(" ")
+        self.color_4_button.clicked.connect(self.choose_color_4)
+
+        self.color_5_button = QtWidgets.QPushButton(" ")
+        self.color_5_button.clicked.connect(self.choose_color_5)
+
+        self.color_6_button = QtWidgets.QPushButton(" ")
+        self.color_6_button.clicked.connect(self.choose_color_6)
+
+        self.load_button = QtWidgets.QPushButton("Load palette")
+        self.load_button.clicked.connect(self.load_palette)
+        self.save_button = QtWidgets.QPushButton("Save palette")
+        self.save_button.clicked.connect(self.save_palette)
+
+
+        # self.end_color_button = QtWidgets.QPushButton("End color")
+        # self.end_color_button.clicked.connect(self.choose_end_color)
 
         self.do_fade_button = QtWidgets.QPushButton("Do Fade")
 
@@ -51,18 +73,29 @@ class MainWindow(QtWidgets.QWidget):
         self.brightness_slider_layout.addWidget(QtWidgets.QLabel("Brightness"))
         self.brightness_slider_layout.addWidget(self.brightness_slider)
     
+        self.palette_layout = QtWidgets.QHBoxLayout()
+        self.palette_layout.addWidget(self.load_button)
+        self.palette_layout.addWidget(self.save_button)
 
+        self.color_layout = QtWidgets.QHBoxLayout()
+        self.color_layout.addWidget(self.color_1_button)
+        self.color_layout.addWidget(self.color_2_button)
+        self.color_layout.addWidget(self.color_3_button)
+        self.color_layout.addWidget(self.color_4_button)
+        self.color_layout.addWidget(self.color_5_button)
+        self.color_layout.addWidget(self.color_6_button)
 
         self.layout =   QtWidgets.QVBoxLayout()
-        self.layout.addWidget(self.start_color_button)
-        self.layout.addWidget(self.end_color_button)
         ##self.layout.addWidget(self.do_fade_button)
+        self.layout.addLayout(self.color_layout)
+        self.layout.addLayout(self.palette_layout)
         self.layout.addWidget(self.combo_box)
         self.layout.addLayout(self.speed_slider_layout)
         self.layout.addLayout(self.brightness_slider_layout)
         
 
         self.setLayout(self.layout)
+
         self.show()
 
 
@@ -80,21 +113,66 @@ class MainWindow(QtWidgets.QWidget):
         self.hp_thread.started.connect(self.hp.run, type=QtCore.Qt.QueuedConnection)
         self.hp_thread.start()
 
-    def choose_start_color(self):
-        global START_COLOR
+    def choose_color_1(self):
         color = QtWidgets.QColorDialog.getColor()
-        #START_COLOR = {"R":color.red(), "G":color.green(), "B":color.blue()}
-        self.hp.set_start_color({"R":color.red(), "G":color.green(), "B":color.blue()})
-        #print(START_COLOR)
-        self.start_color_button.setStyleSheet("background-color: %s"%color.name())
+        self.hp.color_palette[0] = {"R":color.red(), "G":color.green(), "B":color.blue()}
+        self.color_1_button.setStyleSheet("background-color: %s"%color.name())
 
-    def choose_end_color(self):
-        global END_COLOR
+    def choose_color_2(self):
         color = QtWidgets.QColorDialog.getColor()
-        #END_COLOR = {"R":color.red(), "G":color.green(), "B":color.blue()}
-        self.hp.set_end_color({"R":color.red(), "G":color.green(), "B":color.blue()})
-        #print(END_COLOR)
-        self.end_color_button.setStyleSheet("background-color: %s"%color.name())
+        self.hp.color_palette[1] = {"R":color.red(), "G":color.green(), "B":color.blue()}
+        self.color_2_button.setStyleSheet("background-color: %s"%color.name())
+
+    def choose_color_3(self):
+        color = QtWidgets.QColorDialog.getColor()
+        self.hp.color_palette[2] = {"R":color.red(), "G":color.green(), "B":color.blue()}
+        self.color_3_button.setStyleSheet("background-color: %s"%color.name())
+
+    def choose_color_4(self):
+        color = QtWidgets.QColorDialog.getColor()
+        self.hp.color_palette[3] = {"R":color.red(), "G":color.green(), "B":color.blue()}
+        self.color_4_button.setStyleSheet("background-color: %s"%color.name())
+
+    def choose_color_5(self):
+        color = QtWidgets.QColorDialog.getColor()
+        self.hp.color_palette[4] = {"R":color.red(), "G":color.green(), "B":color.blue()}
+        self.color_5_button.setStyleSheet("background-color: %s"%color.name())
+
+    def choose_color_6(self):
+        color = QtWidgets.QColorDialog.getColor()
+        self.hp.color_palette[5] = {"R":color.red(), "G":color.green(), "B":color.blue()}
+        self.color_6_button.setStyleSheet("background-color: %s"%color.name())
+
+
+    def load_palette(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,"Choose palette", "/home/pi/Palettes/")
+        f = open(filename, 'r')
+        lines = f.read()
+        f.close()
+        self.hp.color_palette = json.loads(lines)
+
+    def save_palette(self):
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Choose file name", "/home/pi/Palettes/")
+        f = open(filename+".json", 'w')
+        f.write(json.dumps(self.hp.color_palette))
+        f.close()
+
+
+    # ##def choose_color(self):
+    #     global START_COLOR
+    #     color = QtWidgets.QColorDialog.getColor()
+    #     #START_COLOR = {"R":color.red(), "G":color.green(), "B":color.blue()}
+    #     self.hp.set_start_color({"R":color.red(), "G":color.green(), "B":color.blue()})
+    #     #print(START_COLOR)
+    #     self.start_color_button.setStyleSheet("background-color: %s"%color.name())
+
+    # def choose_end_color(self):
+    #     global END_COLOR
+    #     color = QtWidgets.QColorDialog.getColor()
+    #     #END_COLOR = {"R":color.red(), "G":color.green(), "B":color.blue()}
+    #     self.hp.set_end_color({"R":color.red(), "G":color.green(), "B":color.blue()})
+    #     #print(END_COLOR)
+    #     self.end_color_button.setStyleSheet("background-color: %s"%color.name())
 
     def change_pattern(self, pattern):
         print(pattern)

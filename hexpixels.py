@@ -70,9 +70,9 @@ class HexPixels(QtCore.QObject):
             auto_write=False, 
             pixel_order=neopixel.GRB
         )
-
-        self.start_color = {"R":255, "G":0, "B":0}
-        self.end_color = {"R":0, "G":0, "B":255}
+        red = {"R":255, "G":0, "B":0}
+        blue = {"R":0, "G":0, "B":255}
+        self.color_palette = [red,blue,red,blue,red,blue]
 
         self.stop_received = False
         self.stopped = False
@@ -87,7 +87,7 @@ class HexPixels(QtCore.QObject):
             "Dubble Trubble":self.dubble_trubble,
             "Single Cell Rainbow":self.single_cell_rainbow
             }
-            
+        
         self.current_pattern = "Breathe" 
         self.sleep_time =0.1
         self.is_dubble_trubble_forward = True
@@ -153,28 +153,28 @@ class HexPixels(QtCore.QObject):
     ##########################################
     # PATTERNS
 
-    def set_start_color(self, start_color):
-        LOG.debug('set_start_color: {0}'.format(start_color))
-        self.mutex.lock()
-        self.start_color = start_color
-        self.mutex.unlock()
+    # def set_start_color(self, start_color):
+    #     LOG.debug('set_start_color: {0}'.format(start_color))
+    #     self.mutex.lock()
+    #     self.start_color = start_color
+    #     self.mutex.unlock()
 
-    def set_end_color(self, end_color):
-        LOG.debug('set_end_color: {0}'.format(end_color))
-        self.mutex.lock()
-        self.end_color = end_color
-        self.mutex.unlock()
+    # def set_end_color(self, end_color):
+    #     LOG.debug('set_end_color: {0}'.format(end_color))
+    #     self.mutex.lock()
+    #     self.color_palette[5] = end_color
+    #     self.mutex.unlock()
 
     def breathe(self, counter):
         if counter % 100 == 0 :
             self.breathe_in = not self.breathe_in
         count = (counter % 100) / 100.0
         if self.breathe_in:
-            color1= self.get_fade_color(self.start_color, self.end_color, count)
-            color2= self.get_fade_color(self.end_color, self.start_color, count)
+            color1= self.get_fade_color(self.color_palette[0], self.color_palette[5], count)
+            color2= self.get_fade_color(self.color_palette[5], self.color_palette[0], count)
         else:
-            color1= self.get_fade_color(self.end_color, self.start_color, count)
-            color2= self.get_fade_color(self.start_color, self.end_color, count)
+            color1= self.get_fade_color(self.color_palette[5], self.color_palette[0], count)
+            color2= self.get_fade_color(self.color_palette[0], self.color_palette[5], count)
         self.fade_multiple(color1,[0,2,4,6,8,10,12])
         self.fade_multiple(color2,[1,3,5,7,9,11])
         
@@ -185,25 +185,25 @@ class HexPixels(QtCore.QObject):
             off_hex_index = 12
         else:
             off_hex_index = on_hex_index - 1
-        self.fade_single( self.start_color,on_hex_index)
-        self.fade_single( self.end_color, off_hex_index)
+        self.fade_single( self.color_palette[0],on_hex_index)
+        self.fade_single( self.color_palette[5], off_hex_index)
         
     def single_cell_snake_with_fade(self, counter):
         index = counter%13
         
         # set the color of the snake head (snake 100%)
-        self.fade_single( self.start_color,index)
+        self.fade_single( self.color_palette[0],index)
         # set the color of the snake body (snake 66%)
-        body_color = self.get_fade_color(self.start_color, self.end_color, 0.33)
+        body_color = self.get_fade_color(self.color_palette[0], self.color_palette[5], 0.33)
         index = self.get_previous_hex(index)
         self.fade_single( body_color, index)
         # set the color of the snake tail (snake 33%)
-        tail_color = self.get_fade_color(self.start_color, self.end_color, 0.66)
+        tail_color = self.get_fade_color(self.color_palette[0], self.color_palette[5], 0.66)
         index = self.get_previous_hex(index)
         self.fade_single( tail_color, index)
         # revert the previous tail to the bakcground
         index = self.get_previous_hex(index)
-        self.fade_single( self.end_color, index)
+        self.fade_single( self.color_palette[5], index)
 
     def dubble_trubble(self, counter):
         
@@ -215,14 +215,14 @@ class HexPixels(QtCore.QObject):
 
         print("LH: {0}, RH {1}".format(lh_cell_num, rh_cell_num))
 
-        self.fade_single( self.start_color,lh_cell_num)
-        self.fade_single( self.start_color, rh_cell_num)
+        self.fade_single( self.color_palette[0],lh_cell_num)
+        self.fade_single( self.color_palette[0], rh_cell_num)
         if self.is_dubble_trubble_forward and counter > 0:
-            self.fade_single( self.end_color,lh_cell_num-1)
-            self.fade_single( self.end_color, rh_cell_num+1)
+            self.fade_single( self.color_palette[5],lh_cell_num-1)
+            self.fade_single( self.color_palette[5], rh_cell_num+1)
         else:
-            self.fade_single( self.end_color,lh_cell_num+1)
-            self.fade_single( self.end_color, rh_cell_num-1)
+            self.fade_single( self.color_palette[5],lh_cell_num+1)
+            self.fade_single( self.color_palette[5], rh_cell_num-1)
 
         if counter == 6:
             self.is_dubble_trubble_forward = False
@@ -242,15 +242,15 @@ class HexPixels(QtCore.QObject):
         print("LH: {0}, RH {1}".format(lh_cell_num, rh_cell_num))
 
         # main lh/rh cells
-        self.fade_single( self.start_color,lh_cell_num)
-        self.fade_single( self.start_color, rh_cell_num)
+        self.fade_single( self.color_palette[0],lh_cell_num)
+        self.fade_single( self.color_palette[0], rh_cell_num)
 
         if self.is_dubble_trubble_forward and counter > 0:
-            self.fade_single( self.end_color,lh_cell_num-1)
-            self.fade_single( self.end_color, rh_cell_num+1)
+            self.fade_single( self.color_palette[5],lh_cell_num-1)
+            self.fade_single( self.color_palette[5], rh_cell_num+1)
         else:
-            self.fade_single( self.end_color,lh_cell_num+1)
-            self.fade_single( self.end_color, rh_cell_num-1)
+            self.fade_single( self.color_palette[5],lh_cell_num+1)
+            self.fade_single( self.color_palette[5], rh_cell_num-1)
         # tail 1 
         if counter == 6:
             self.is_dubble_trubble_forward = False
