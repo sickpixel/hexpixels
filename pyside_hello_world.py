@@ -1,5 +1,5 @@
 import sys
-from PySide2 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets, QtGui
 
 # Simple test for NeoPixels on Raspberry Pi
 import time
@@ -95,8 +95,9 @@ class MainWindow(QtWidgets.QWidget):
         
 
         self.setLayout(self.layout)
-
+        self.set_button_colors(self.hp.color_palette)
         self.show()
+
 
 
 
@@ -113,10 +114,16 @@ class MainWindow(QtWidgets.QWidget):
         self.hp_thread.started.connect(self.hp.run, type=QtCore.Qt.QueuedConnection)
         self.hp_thread.start()
 
+    def set_button_color(self,button,color):
+        col = QtGui.QColor.fromRgb(color["R"],color["G"], color["B"])
+        button.setStyleSheet("background-color: %s"%col.name())
+
+
     def choose_color_1(self):
         color = QtWidgets.QColorDialog.getColor()
         self.hp.color_palette[0] = {"R":color.red(), "G":color.green(), "B":color.blue()}
-        self.color_1_button.setStyleSheet("background-color: %s"%color.name())
+        self.set_button_color(self.color_1_button, self.hp.color_palette[0])
+        
 
     def choose_color_2(self):
         color = QtWidgets.QColorDialog.getColor()
@@ -150,6 +157,17 @@ class MainWindow(QtWidgets.QWidget):
         lines = f.read()
         f.close()
         self.hp.color_palette = json.loads(lines)
+        self.set_button_colors(self.hp.color_palette)
+
+    def set_button_colors(self,color_palette):
+        self.set_button_color(self.color_1_button, color_palette[0])
+        self.set_button_color(self.color_2_button, color_palette[1])
+        self.set_button_color(self.color_3_button, color_palette[2])
+        self.set_button_color(self.color_4_button, color_palette[3])
+        self.set_button_color(self.color_5_button, color_palette[4])
+        self.set_button_color(self.color_6_button, color_palette[5])
+
+
 
     def save_palette(self):
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Choose file name", "/home/pi/Palettes/")
