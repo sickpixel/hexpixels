@@ -9,12 +9,15 @@ from PySide2 import QtCore
 class SingleHex(QtCore.QObject):
     NUM_PIXELS = 30
 
-    def __init__(self, hex_index,pixels):
+    def __init__(self, hex_index,parent):
 
         super(SingleHex, self).__init__()
-        self.start_index = self.NUM_PIXELS * hex_index
-        self.end_index = self.start_index + (self.NUM_PIXELS - 1)
-        self.pixels = pixels
+        start_index = self.NUM_PIXELS * hex_index
+        end_index = start_index + (self.NUM_PIXELS - 1)
+        self.pixel_indexes = list(range(start_index, end_index +1))
+        self.orig_pixel_indexes = self.pixel_indexes
+        self.parent = parent
+        self.pixels = parent.pixels
 
     def wheel(self, pos):
         # Input a value 0 to 255 to get a color value.
@@ -41,12 +44,24 @@ class SingleHex(QtCore.QObject):
     def rainbow_cycle(self, counter):
         counter = counter * 5
         j = counter %255
-        for i in range(self.start_index, self.end_index +1):
+        for i in self.pixel_indexes:
             #if i%2 == 0: 
             #    continue
             pixel_index = (i * 256 // self.NUM_PIXELS) + j
             self.pixels[i] = self.wheel(pixel_index & 255)
 
+
+    def calibration(self, counter):
+        for i in range(6):
+            color = self.parent.color_palette[i]
+            for j in range(5):
+                pixel_index = (i *5) + j
+                self.pixels[self.pixel_indexes[pixel_index]] = (int(color["R"]), int(color["G"]), int(color["B"]))
+
+    def set_offset(self,offset):
+        from_end = self.orig_pixel_indexes[-offset:]
+        from_start = self.orig_pixel_indexes[:-offset]
+        self.pixel_indexes = from_end + from_start
 
 class HexPixels(QtCore.QObject):
 
@@ -85,7 +100,8 @@ class HexPixels(QtCore.QObject):
             "Single cell snake":self.single_cell_snake,
             "Fedded sanke":self.single_cell_snake_with_fade,
             "Dubble Trubble":self.dubble_trubble,
-            "Single Cell Rainbow":self.single_cell_rainbow
+            "Single Cell Rainbow":self.single_cell_rainbow,
+            "Calibration":self.calibrate
             }
         
         self.current_pattern = "Breathe" 
@@ -96,7 +112,10 @@ class HexPixels(QtCore.QObject):
         self.num_hexes = int(num_pixels / SingleHex.NUM_PIXELS)
         print(self.num_hexes)
         for hex_index in range(self.num_hexes):
-            self.single_hexes.append(SingleHex(hex_index,self.pixels))
+            self.single_hexes.append(SingleHex(hex_index,self))
+        
+        self.is_calibrating = False
+        self.calibration_index = 0
 
     def set_brightness(self, brightness):
         self.pixels.brightness = brightness
@@ -267,6 +286,11 @@ class HexPixels(QtCore.QObject):
     def single_cell_rainbow(self,counter):
         for single_hex in self.single_hexes:
             single_hex.rainbow_cycle(counter)
+
+    def calibrate(self,counter):
+        self.pixels.fill((0, 0, 0))
+        self.single_hexes[self.calibration_index].calibration(counter)
+
 
     def shutdown(self):
         LOG.debug('[{0}] HexPixels::stop received'.format(QtCore.QThread.currentThread().objectName()))

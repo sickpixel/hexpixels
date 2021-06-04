@@ -65,6 +65,16 @@ class MainWindow(QtWidgets.QWidget):
         self.brightness_slider.setMaximum(7)
         self.brightness_slider.valueChanged.connect(self.set_brightness)
 
+        self.calibration_slider = QtWidgets.QSlider(orientation = QtCore.Qt.Horizontal)
+        self.calibration_slider.setMinimum(0)
+        self.calibration_slider.setMaximum(29)
+        self.calibration_slider.valueChanged.connect(self.set_orientation)
+
+        self.calibration_target_slider = QtWidgets.QSlider(orientation = QtCore.Qt.Horizontal)
+        self.calibration_target_slider.setMinimum(0)
+        self.calibration_target_slider.setMaximum(self.hp.num_hexes -1)
+        self.calibration_target_slider.valueChanged.connect(self.set_calibration_target)
+
         self.speed_slider_layout = QtWidgets.QHBoxLayout()
         self.speed_slider_layout.addWidget(QtWidgets.QLabel("Speed"))
         self.speed_slider_layout.addWidget(self.speed_slider)
@@ -72,6 +82,14 @@ class MainWindow(QtWidgets.QWidget):
         self.brightness_slider_layout = QtWidgets.QHBoxLayout()
         self.brightness_slider_layout.addWidget(QtWidgets.QLabel("Brightness"))
         self.brightness_slider_layout.addWidget(self.brightness_slider)
+
+        self.calibration_slider_layout = QtWidgets.QHBoxLayout()
+        self.calibration_slider_layout.addWidget(QtWidgets.QLabel("Oriention"))
+        self.calibration_slider_layout.addWidget(self.calibration_slider)
+
+        self.calibration_target_slider_layout = QtWidgets.QHBoxLayout()
+        self.calibration_target_slider_layout.addWidget(QtWidgets.QLabel("Oriention target"))
+        self.calibration_target_slider_layout.addWidget(self.calibration_target_slider)
     
         self.palette_layout = QtWidgets.QHBoxLayout()
         self.palette_layout.addWidget(self.load_button)
@@ -92,7 +110,9 @@ class MainWindow(QtWidgets.QWidget):
         self.layout.addWidget(self.combo_box)
         self.layout.addLayout(self.speed_slider_layout)
         self.layout.addLayout(self.brightness_slider_layout)
-        
+        self.layout.addLayout(self.calibration_slider_layout)
+        self.layout.addLayout(self.calibration_target_slider_layout)
+
 
         self.setLayout(self.layout)
         self.set_button_colors(self.hp.color_palette)
@@ -211,6 +231,12 @@ class MainWindow(QtWidgets.QWidget):
         value = value/10
         print ("brightness = {0}".format(value)) 
         self.hp.set_brightness(value)
+
+    def set_orientation(self,value):
+        self.hp.single_hexes[self.hp.calibration_index].set_offset(value)
+
+    def set_calibration_target(self,value):
+        self.hp.calibration_index = value
     
 app = QtWidgets.QApplication(sys.argv)
 main_window = MainWindow()
