@@ -8,7 +8,7 @@ import hexpixels
 START_COLOR = {"R":255, "G":0, "B":0}
 END_COLOR = {"R":0, "G":0, "B":255}
 
-HP = hexpixels.HexPixels(390, 0.7)
+HP = hexpixels.HexLights(390, 0.7)
 
 HP.clear()
 time.sleep(1)
