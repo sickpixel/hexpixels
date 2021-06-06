@@ -15,6 +15,7 @@ class Hex(QtCore.QObject):
         self.orig_pixel_indexes = self.pixel_indexes
         self.parent = parent
         self.pixels = parent.pixels
+        self.offset = 0
 
     def wheel(self, pos):
         # Input a value 0 to 255 to get a color value.
@@ -41,11 +42,11 @@ class Hex(QtCore.QObject):
     def rainbow_cycle(self, counter):
         counter = counter * 5
         j = counter %255
-        for i in self.pixel_indexes:
+        for i, idx in enumerate(self.pixel_indexes):
             #if i%2 == 0: 
             #    continue
             pixel_index = (i * 256 // self.NUM_PIXELS) + j
-            self.pixels[i] = self.wheel(pixel_index & 255)
+            self.pixels[idx] = self.wheel(pixel_index & 255)
 
 
     def calibration(self, counter):
@@ -56,6 +57,7 @@ class Hex(QtCore.QObject):
                 self.pixels[self.pixel_indexes[pixel_index]] = (int(color["R"]), int(color["G"]), int(color["B"]))
 
     def set_offset(self,offset):
+        self.offset = offset
         from_end = self.orig_pixel_indexes[-offset:]
         from_start = self.orig_pixel_indexes[:-offset]
         self.pixel_indexes = from_end + from_start
