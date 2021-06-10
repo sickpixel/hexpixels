@@ -51,6 +51,7 @@ class CalibrationDialog(QtWidgets.QDialog):
         self.setLayout(self.layout)
         self.parent.hp.current_pattern = "Calibration"
         self.parent.load_palette("/home/pi/Palettes/calibration.json")
+        
 class MainWindow(QtWidgets.QWidget):
 
     def __init__(self, parent=None):

@@ -51,12 +51,14 @@ class HexLights(QtCore.QObject):
             "Fedded sanke":self.single_cell_snake_with_fade,
             "Dubble Trubble":self.dubble_trubble,
             "Single Cell Rainbow":self.single_cell_rainbow,
-            "Calibration":self.calibrate
+            "Calibration":self.calibrate,
+            "DNA":self.DNA
             }
         
         self.current_pattern = "Breathe" 
         self.sleep_time =0.1
         self.is_dubble_trubble_forward = True
+        self.dna_forwards = []
         
         #Calibration
         self.is_calibrating = False
@@ -76,6 +78,9 @@ class HexLights(QtCore.QObject):
         self.stopped = True
     
     def set_current_pattern(self,pattern):
+        if pattern == "DNA":
+            self.create_dna_lists()
+
         self.current_pattern = pattern
 
     def set_single(self, color,hex_index):
@@ -224,6 +229,28 @@ class HexLights(QtCore.QObject):
     def calibrate(self,counter):
         self.pixels.fill((0, 0, 0))
         self.single_hexes[self.calibration_index].calibration(counter)
+
+    def create_dna_lists(self):
+        hex_offsets = [15, 5, 15, 10, 20, 10, 5, 10, 20, 10, 15, 5, 15]
+        self.dna_forwards = []
+        self.dna_backwards = []
+        for hex_index in range(self.num_hexes):
+            hex_out = hex_offsets[hex_index]
+            hex_offset = hex_index*30
+            if hex_index %2 == 0:
+                #even
+                self.dna_forwards += list(range(hex_offset,hex_offset +hex_out))
+            else:
+                #odd 
+                self.dna_forwards += list(reversed(list(range(hex_offset +hex_out, hex_offset +30))))
+        
+
+    def DNA(self,counter):
+        self.clear()
+        counter = counter % (len(self.dna_forwards)-1)
+        pixel_index = self.dna_forwards[counter]
+        color = self.color_palette[0]
+        self.pixels[pixel_index] = (int(color["R"]), int(color["G"]), int(color["B"]))
 
     def shutdown(self):
         LOG.debug('[{0}] HexPixels::stop received'.format(QtCore.QThread.currentThread().objectName()))
