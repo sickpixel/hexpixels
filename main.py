@@ -211,6 +211,10 @@ class MainWindow(QtWidgets.QWidget):
     #Other actions
 
     def change_pattern(self, pattern):
+        if pattern=="DNA":
+            self.load_calibration("/home/pi/Calibrations/DNA.json")
+            self.hp.clear()
+
         self.hp.set_current_pattern(pattern)
 
     def set_sleep_time(self, value):

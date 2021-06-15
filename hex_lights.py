@@ -231,26 +231,34 @@ class HexLights(QtCore.QObject):
         self.single_hexes[self.calibration_index].calibration(counter)
 
     def create_dna_lists(self):
-        hex_offsets = [15, 5, 15, 10, 20, 10, 5, 10, 20, 10, 15, 5, 15]
+        
+        # hex_offsets = [20, 10, 20, 10, 20, 10, 10, 20, 30, 20, 20, 10, 20]
+        hex_offsets = [25, 15, 25, 20, 30, 20, 15, 20, 30, 20, 25, 15, 25]
+
         self.dna_forwards = []
         self.dna_backwards = []
         for hex_index in range(self.num_hexes):
             hex_out = hex_offsets[hex_index]
             hex_offset = hex_index*30
+            hex = self.single_hexes[hex_index]
+            print("%d:%s"%(hex_index, hex.pixel_indexes))
             if hex_index %2 == 0:
                 #even
-                self.dna_forwards += list(range(hex_offset,hex_offset +hex_out))
+                for i in range(0, hex_out):
+                    self.dna_forwards.append(hex.pixel_indexes[i])
             else:
-                #odd 
-                self.dna_forwards += list(reversed(list(range(hex_offset +hex_out, hex_offset +30))))
-        
+                #odd
+                rev_range = list(reversed(range(hex_out,30)))
+                for i in rev_range:
+                    self.dna_forwards.append(hex.pixel_indexes[i])
 
+        
     def DNA(self,counter):
-        self.clear()
+        # self.clear()
         counter = counter % (len(self.dna_forwards)-1)
         pixel_index = self.dna_forwards[counter]
         color = self.color_palette[0]
-        self.pixels[pixel_index] = (int(color["R"]), int(color["G"]), int(color["B"]))
+        self.pixels[pixel_index] = (int(color["R"]), int(color["G"]), int(color["B"]))  
 
     def shutdown(self):
         LOG.debug('[{0}] HexPixels::stop received'.format(QtCore.QThread.currentThread().objectName()))
