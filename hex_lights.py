@@ -134,19 +134,19 @@ class HexLights(QtCore.QObject):
             color1= self.get_fade_color(self.color_palette[5], self.color_palette[0], count)
             color2= self.get_fade_color(self.color_palette[0], self.color_palette[5], count)
         self.set_multiple(color1,[0,2,4,6,8,10,12])
-        self.set_multiple(color2,[1,3,5,7,9,11])
+        self.set_multiple(color2,[1,3,5,7,9,11,13])
         
     def single_cell_snake(self, counter):
-        on_hex_index = counter%13
+        on_hex_index = counter%14
         if on_hex_index == 0:
-            off_hex_index = 12
+            off_hex_index = 13
         else:
             off_hex_index = on_hex_index - 1
         self.set_single( self.color_palette[0],on_hex_index)
         self.set_single( self.color_palette[5], off_hex_index)
         
     def single_cell_snake_with_fade(self, counter):
-        index = counter%13
+        index = counter%14
         
         # set the color of the snake head (snake 100%)
         self.set_single( self.color_palette[0],index)
@@ -164,24 +164,33 @@ class HexLights(QtCore.QObject):
 
     def dubble_trubble(self, counter):
         
-        counter = counter%7
+        counter = counter%8
         if not self.is_dubble_trubble_forward:
-            counter = 6-counter
+            counter = 7-counter
+        # colour the left side
         lh_cell_num = counter
-        rh_cell_num = 12-counter
-
-        print("LH: {0}, RH {1}".format(lh_cell_num, rh_cell_num))
-
+        # light the new head
         self.set_single( self.color_palette[0],lh_cell_num)
-        self.set_single( self.color_palette[0], rh_cell_num)
+        # switch the old head back to the original colour
         if self.is_dubble_trubble_forward and counter > 0:
             self.set_single( self.color_palette[5],lh_cell_num-1)
-            self.set_single( self.color_palette[5], rh_cell_num+1)
         else:
             self.set_single( self.color_palette[5],lh_cell_num+1)
-            self.set_single( self.color_palette[5], rh_cell_num-1)
 
-        if counter == 6:
+        # colour the right side
+        rh_cell_num = 14-counter
+        if rh_cell_num == 7:
+            self.set_single( self.color_palette[5], 8)
+        elif rh_cell_num == 14:
+            self.set_single( self.color_palette[5], 13)
+        else:
+            self.set_single( self.color_palette[0], rh_cell_num)
+            if self.is_dubble_trubble_forward and rh_cell_num <13:
+                self.set_single( self.color_palette[5], rh_cell_num+1)
+            elif not self.is_dubble_trubble_forward:
+                self.set_single( self.color_palette[5], rh_cell_num-1)
+
+        if counter == 7:
             self.is_dubble_trubble_forward = False
         elif counter == 0:
             self.is_dubble_trubble_forward = True
@@ -218,7 +227,7 @@ class HexLights(QtCore.QObject):
 
     def get_previous_hex(self, index):
         if index == 0:
-            return 12
+            return 13
         else:
             return index - 1
 
@@ -266,3 +275,4 @@ class HexLights(QtCore.QObject):
         while not self.stopped:
             QtCore.QThread.msleep(100)
         LOG.debug('[{0}] HexPixels::stopped'.format(QtCore.QThread.currentThread().objectName()))
+        

@@ -2,9 +2,6 @@ import sys
 from PySide2 import QtCore, QtWidgets, QtGui
 
 # Simple test for NeoPixels on Raspberry Pi
-import time
-import select
-import math
 import hex_lights
 import json
 
@@ -56,7 +53,7 @@ class MainWindow(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.hp = hex_lights.HexLights(390, 0.5)
+        self.hp = hex_lights.HexLights(420, 0.5)
 
         #Widgets
 
@@ -154,7 +151,6 @@ class MainWindow(QtWidgets.QWidget):
     def choose_color_1(self):
         self.choose_color_for_button(0,self.color_1_button)
         
-
     def choose_color_for_button(self,palette_index, button):
         color = QtWidgets.QColorDialog.getColor()
         self.hp.color_palette[palette_index] = {"R":color.red(), "G":color.green(), "B":color.blue()}
@@ -264,6 +260,7 @@ class MainWindow(QtWidgets.QWidget):
         self.hp_thread.quit()
         self.hp_thread.wait()
         event.accept()
+
 
 app = QtWidgets.QApplication(sys.argv)
 main_window = MainWindow()

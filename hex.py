@@ -61,3 +61,9 @@ class Hex(QtCore.QObject):
         from_end = self.orig_pixel_indexes[-offset:]
         from_start = self.orig_pixel_indexes[:-offset]
         self.pixel_indexes = from_end + from_start
+
+
+
+
+
+        
